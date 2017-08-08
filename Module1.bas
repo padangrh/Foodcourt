@@ -37,6 +37,15 @@ As Long
 Declare Sub Sleep Lib "kernel32" _
    (ByVal dwMilliseconds As Long)
    
+'barcode
+Private Declare Function AddFontResource Lib "gdi32" Alias _
+    "AddFontResourceA" (ByVal lpFileName As String) As Long
+
+Private Declare Function RemoveFontResource Lib "gdi32" _
+    Alias "RemoveFontResourceA" (ByVal lpFileName As _
+    String) As Long
+'end barcode
+
 Public Sub connect()
     
     
@@ -86,5 +95,25 @@ Sub Main()
     fMainForm.Show
 End Sub
 
+
+'tambahan barcode
+
+' To add the font
+Public Sub AddFont(ByVal sFontFile As String)
+    Dim lResult As Long
+
+    ' e.g.: lResult = AddFontResource("c:\myApp\myFont.ttf")
+    lResult = AddFontResource(sFontFile)
+End Sub
+
+' To remove the font
+Public Sub RemoveFont(ByVal sFontFile As String)
+Dim lResult As Long
+
+    ' e.g.: lResult =
+    ' RemoveFontResource("c:\myApp\myFont.ttf")
+    lResult = RemoveFontResource(sFontFile)
+End Sub
+'end tambahan barcode
 
 

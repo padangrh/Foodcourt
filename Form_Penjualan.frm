@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.2#0"; "MSCOMCTL.OCX"
 Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCT2.OCX"
 Object = "{648A5603-2C6E-101B-82B6-000000000014}#1.1#0"; "MSCOMM32.OCX"
 Begin VB.Form Form_Penjualan 
@@ -25,6 +25,7 @@ Begin VB.Form Form_Penjualan
       _ExtentX        =   14843
       _ExtentY        =   4048
       View            =   3
+      LabelEdit       =   1
       LabelWrap       =   -1  'True
       HideSelection   =   -1  'True
       HideColumnHeaders=   -1  'True
@@ -442,7 +443,7 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
-Dim rsbarang As ADODB.Recordset
+Dim rsBarang As ADODB.Recordset
 Dim txt_nama_toggle As Boolean
 
 Private Sub Form_Load()
@@ -450,7 +451,7 @@ Private Sub Form_Load()
     txt_total = 0
     kosongkan
     txt_nama_toggle = False
-    Set rsbarang = con.Execute("select * from tbbarang")
+    Set rsBarang = con.Execute("select * from tbbarang")
         
     Dim namafile, file_data, huruf As String
     Dim angka As Long
@@ -499,7 +500,15 @@ Private Sub Form_KeyDown(key As Integer, Shift As Integer)
             Me.Enabled = False
             If MSComm1.PortOpen Then
                 MSComm1.Output = Chr$(&H1B) + Chr$(&H49) + Chr$(&HC)
-                MSComm1.Output = "Total Belanja:      " + txt_total.Text
+                'MSComm1.Output = "Total Belanja:      " + txt_total.Text
+                
+                MSComm1.Output = "Pajak(10%) :" & Right("              ", 9 - _
+                    Len(Format(priceToNum(txt_total.Text) * 0.1, "###,###,##0"))) & _
+                    Format(priceToNum(txt_total.Text) * 0.1, "###,###,##0") & _
+                    txt_total.Text & "Total :" & Right("              ", _
+                    13 - Len(Format(priceToNum(txt_total.Text) * 1.1, "###,###,##0"))) & _
+                    Format(Round(priceToNum(txt_total.Text) * 1.1 / 500) * 500, "###,###,##0")
+                
             End If
         Else
             MsgBox "Faktur masih kosong"
@@ -512,7 +521,7 @@ Private Sub Form_KeyDown(key As Integer, Shift As Integer)
             lv_jual.ListItems.Clear
         Else
             txt_total = Format(priceToNum(txt_total) - priceToNum(lv_jual.SelectedItem.SubItems(4)), "###,###,##0")
-            lv_jual.ListItems.Remove (lv_jual.SelectedItem.Index)
+            lv_jual.ListItems.Remove (lv_jual.SelectedItem.index)
         End If
     End If
     If key = 115 Then
@@ -526,7 +535,7 @@ Private Sub kosongkan()
     txt_kode.Text = ""
     txt_nama.Text = ""
     txt_harga.Text = ""
-    txt_jumlah.Text = 1
+    txt_Jumlah.Text = 1
     list_nama.Visible = False
 End Sub
 
@@ -580,19 +589,19 @@ End Sub
 
 Private Sub list_nama_DblClick()
     If getItemByID(list_nama.SelectedItem.Text) Then
-        txt_kode.Text = rsbarang!kode
-        txt_nama.Text = rsbarang!nama
-        txt_harga.Text = Format(rsbarang!harga_jual, "###,###,###")
+        txt_kode.Text = rsBarang!kode
+        txt_nama.Text = rsBarang!nama
+        txt_harga.Text = Format(rsBarang!harga_jual, "###,###,###")
         list_nama.Visible = False
-        txt_jumlah.SetFocus
-        txt_jumlah.SelLength = Len(txt_jumlah.Text)
+        txt_Jumlah.SetFocus
+        txt_Jumlah.SelLength = Len(txt_Jumlah.Text)
     End If
 End Sub
 
-Private Sub txt_jumlah_KeyDown(key As Integer, Shift As Integer)
+Private Sub txt_Jumlah_KeyDown(key As Integer, Shift As Integer)
     If key = 13 Then
-        If Len(txt_jumlah) > 4 Then
-            txt_jumlah = ""
+        If Len(txt_Jumlah) > 4 Then
+            txt_Jumlah = ""
             Exit Sub
         End If
     
@@ -601,7 +610,7 @@ Private Sub txt_jumlah_KeyDown(key As Integer, Shift As Integer)
             Exit Sub
         End If
         
-        If Val(txt_jumlah.Text) < 1 Then
+        If Val(txt_Jumlah.Text) < 1 Then
             MsgBox "Jumlah tidak valid"
             Exit Sub
         End If
@@ -612,10 +621,10 @@ Private Sub txt_jumlah_KeyDown(key As Integer, Shift As Integer)
         i = 1
         
         Do While i <= lv_jual.ListItems.count
-            If lv_jual.ListItems(i).Text = rsbarang!kode Then
+            If lv_jual.ListItems(i).Text = rsBarang!kode Then
                 found = True
-                lv_jual.ListItems(i).SubItems(3) = Val(lv_jual.ListItems(i).SubItems(3)) + Val(txt_jumlah.Text)
-                lv_jual.ListItems(i).SubItems(4) = priceToNum(lv_jual.ListItems(i).SubItems(4)) + Val(txt_jumlah.Text) * priceToNum(txt_harga)
+                lv_jual.ListItems(i).SubItems(3) = Val(lv_jual.ListItems(i).SubItems(3)) + Val(txt_Jumlah.Text)
+                lv_jual.ListItems(i).SubItems(4) = priceToNum(lv_jual.ListItems(i).SubItems(4)) + Val(txt_Jumlah.Text) * priceToNum(txt_harga)
                 lv_jual.ListItems(i).SubItems(4) = Format(lv_jual.ListItems(i).SubItems(4), "###,###,###")
                 Exit Do
             End If
@@ -623,14 +632,14 @@ Private Sub txt_jumlah_KeyDown(key As Integer, Shift As Integer)
         Loop
         
         Dim subtotal As String
-        subtotal = Format(rsbarang!harga_jual * Val(txt_jumlah), "###,###,###")
+        subtotal = Format(rsBarang!harga_jual * Val(txt_Jumlah), "###,###,###")
         
         If found = False Then
             Dim item As ListItem
-            Set item = lv_jual.ListItems.Add(, , rsbarang!kode)
-            item.SubItems(1) = rsbarang!nama
-            item.SubItems(2) = Format(rsbarang!harga_jual, "###,###,###")
-            item.SubItems(3) = txt_jumlah.Text
+            Set item = lv_jual.ListItems.Add(, , rsBarang!kode)
+            item.SubItems(1) = rsBarang!nama
+            item.SubItems(2) = Format(rsBarang!harga_jual, "###,###,###")
+            item.SubItems(3) = txt_Jumlah.Text
             item.SubItems(4) = subtotal
         End If
         
@@ -639,7 +648,7 @@ Private Sub txt_jumlah_KeyDown(key As Integer, Shift As Integer)
         If MSComm1.PortOpen Then
             MSComm1.Output = Chr$(&H1B) + Chr$(&H49) + Chr$(&HC)
             Dim baris1, baris2 As String
-            baris1 = txt_jumlah.Text + " " + txt_nama.Text
+            baris1 = txt_Jumlah.Text + " " + txt_nama.Text
             If Len(baris1) < 20 Then
                Do While (Len(baris1) < 20)
                 baris1 = baris1 + " "
@@ -671,10 +680,10 @@ Private Sub txt_kode_KeyDown(key As Integer, Shift As Integer)
         Dim kode As String
         kode = Trim(txt_kode.Text)
         If getItemByID(kode) Then
-            txt_nama.Text = rsbarang!nama
-            txt_harga.Text = Format(rsbarang!harga_jual, "###,###,###")
-            txt_jumlah.SetFocus
-            txt_jumlah.SelLength = Len(txt_jumlah.Text)
+            txt_nama.Text = rsBarang!nama
+            txt_harga.Text = Format(rsBarang!harga_jual, "###,###,###")
+            txt_Jumlah.SetFocus
+            txt_Jumlah.SelLength = Len(txt_Jumlah.Text)
         Else
             MsgBox ("Kode ini tidak terdaftar")
         End If
@@ -685,13 +694,13 @@ Private Sub txt_kode_KeyDown(key As Integer, Shift As Integer)
 End Sub
 
 Private Function getItemByID(kode As String) As Boolean
-    rsbarang.MoveFirst
-    Do While Not rsbarang.EOF
-        If rsbarang!kode = kode Then
+    rsBarang.MoveFirst
+    Do While Not rsBarang.EOF
+        If rsBarang!kode = kode Then
             getItemByID = True
             Exit Function
         End If
-        rsbarang.MoveNext
+        rsBarang.MoveNext
     Loop
     getItemByID = False
 End Function

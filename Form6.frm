@@ -1,19 +1,77 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.2#0"; "MSCOMCTL.OCX"
 Object = "{C932BA88-4374-101B-A56C-00AA003668DC}#1.1#0"; "MSMASK32.OCX"
 Begin VB.Form Form_Entri_Barang 
    BackColor       =   &H0000C000&
    Caption         =   "Entri Data Barang"
-   ClientHeight    =   5580
+   ClientHeight    =   6720
    ClientLeft      =   120
    ClientTop       =   450
-   ClientWidth     =   8640
+   ClientWidth     =   15675
    ControlBox      =   0   'False
    Icon            =   "Form6.frx":0000
    LinkTopic       =   "Entri "
-   ScaleHeight     =   5580
-   ScaleWidth      =   8640
+   ScaleHeight     =   6720
+   ScaleWidth      =   15675
    StartUpPosition =   2  'CenterScreen
+   Begin VB.PictureBox Picture4 
+      Height          =   1320
+      Left            =   9000
+      ScaleHeight     =   1260
+      ScaleWidth      =   5835
+      TabIndex        =   20
+      Top             =   4680
+      Width           =   5895
+   End
+   Begin VB.PictureBox Picture2 
+      Height          =   3480
+      Left            =   8880
+      Picture         =   "Form6.frx":628A
+      ScaleHeight     =   3481.901
+      ScaleMode       =   0  'User
+      ScaleWidth      =   6075
+      TabIndex        =   19
+      Top             =   0
+      Visible         =   0   'False
+      Width           =   6135
+   End
+   Begin VB.PictureBox Picture3 
+      Height          =   1215
+      Left            =   480
+      Picture         =   "Form6.frx":49DCC
+      ScaleHeight     =   1155
+      ScaleWidth      =   2115
+      TabIndex        =   18
+      Top             =   4920
+      Visible         =   0   'False
+      Width           =   2175
+   End
+   Begin VB.PictureBox Picture1 
+      Height          =   3480
+      Left            =   8880
+      ScaleHeight     =   3420
+      ScaleWidth      =   6075
+      TabIndex        =   17
+      Top             =   960
+      Width           =   6135
+   End
+   Begin VB.CommandButton cmd_Barcode 
+      Caption         =   "Buat Barcode"
+      BeginProperty Font 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   700
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      Height          =   855
+      Left            =   7200
+      TabIndex        =   16
+      Top             =   4080
+      Width           =   1095
+   End
    Begin VB.TextBox txt_nama_supplier 
       Appearance      =   0  'Flat
       BeginProperty Font 
@@ -331,7 +389,65 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
-Dim rsbarang As New ADODB.Recordset
+Option Explicit
+Private Type BITMAPINFOHEADER
+    biSize As Long
+    biWidth As Long
+    biHeight As Long
+    biPlanes As Integer
+    biBitCount As Integer
+    biCompression As Long
+    biSizeImage As Long
+    biXPelsPerMeter As Long
+    biYPelsPerMeter As Long
+    biClrUsed As Long
+    biClrImportant As Long
+End Type
+
+Private Type RGBQUAD
+    rgbBlue As Byte
+    rgbGreen As Byte
+    rgbRed As Byte
+    rgbReserved As Byte
+End Type
+
+Private Type BITMAPINFO1
+    bmiHeader As BITMAPINFOHEADER
+    bmiColors(1) As RGBQUAD
+End Type
+
+Private Type BITMAPINFO8
+    bmiHeader As BITMAPINFOHEADER
+    bmiColors(255) As RGBQUAD
+End Type
+
+ Private Declare Function CreateDIBSection1 Lib "gdi32" _
+    Alias "CreateDIBSection" (ByVal hdc As Long, _
+    pBitmapInfo As BITMAPINFO1, ByVal un As Long, _
+    ByVal lplpVoid As Long, ByVal handle As Long, _
+    ByVal dw As Long) As Long
+
+Private Declare Function CreateDIBSection8 Lib "gdi32" _
+    Alias "CreateDIBSection" (ByVal hdc As Long, _
+    pBitmapInfo As BITMAPINFO8, ByVal un As Long, _
+    ByVal lplpVoid As Long, ByVal handle As Long, _
+    ByVal dw As Long) As Long
+
+Private Declare Function BitBlt Lib "gdi32" _
+    (ByVal hDestDC As Long, ByVal x As Long, ByVal y As Long, _
+    ByVal nWidth As Long, ByVal nHeight As Long, _
+    ByVal hSrcDC As Long, ByVal xSrc As Long, _
+    ByVal ySrc As Long, ByVal dwRop As Long) As Long
+
+Private Declare Function DeleteObject Lib "gdi32" (ByVal hObject As Long) As Long
+Private Declare Function DeleteDC Lib "gdi32" (ByVal hdc As Long) As Long
+Private Declare Function GetDesktopWindow Lib "user32" () As Long
+Private Declare Function GetDC Lib "user32" (ByVal hwnd As Long) As Long
+Private Declare Function ReleaseDC Lib "user32" (ByVal hwnd As Long, ByVal hdc As Long) As Long
+Private Declare Function CreateCompatibleDC Lib "gdi32" (ByVal hdc As Long) As Long
+Private Declare Function SelectObject Lib "gdi32" (ByVal hdc As Long, ByVal hObject As Long) As Long
+
+Dim rsBarang As New ADODB.Recordset
 Dim txt_sup_toggle As Boolean
 
 Private Sub btn_kategori_Click()
@@ -361,6 +477,97 @@ Private Sub cb_kategori_KeyPress(key As Integer)
     If key = 13 Then
         txt_jual.SetFocus
     End If
+End Sub
+
+Private Sub cmd_Barcode_Click()
+    AddFont (App.Path & "\fre3of9x.ttf")
+    Dim resize As Variant
+    Picture1.Width = 6135
+    'Picture1.Height = 4337
+    Picture1.Height = 3480
+    Picture1.Cls
+    DoEvents
+    resize = 0.5
+    Picture1.AutoRedraw = True
+    Picture1.AutoSize = True
+    Picture1.PaintPicture Picture2.Image, 0, 0
+    
+    Picture4.AutoRedraw = True
+    Picture4.AutoSize = True
+    Picture4.FontBold = False
+    Picture4.FontSize = 72
+    Picture4.Font = "Free 3 of 9 Extended"
+    Picture4.CurrentY = 10
+    Picture4.CurrentX = (Picture4.ScaleWidth - Picture4.TextWidth(Barcode39(txt_kode.Text))) / 2
+    Picture4.Print Barcode39(txt_kode.Text)
+'    Picture1.CurrentX = (Picture1.ScaleWidth - Picture1.TextWidth(Barcode39(txt_kode.Text))) / 2
+'    Picture1.Print Barcode39(txt_kode.Text)
+'    Picture4.Font = "dotumche"
+    DoEvents
+'    Picture1.AutoRedraw = True
+'    Picture1.AutoSize = True
+'    Picture1.PaintPicture Picture4.Image, 100, 1500, resize * Picture4.Width, resize * Picture4.Height
+    '(Picture1.Width - (Picture4.Width * resize)) / 4
+    Call MonoChrome
+    
+    Picture1.FontSize = 24
+    Picture1.FontBold = True
+    Picture1.Font = "Times New Roman"
+    Picture1.FontSize = 14
+    Picture1.FontBold = True
+    Picture1.CurrentY = 300
+    Picture1.CurrentX = Picture1.ScaleWidth - Picture1.TextWidth("Tenant No :   ")
+    Picture1.Print "Tenant No :   "
+    Picture1.FontSize = 36
+    Picture1.CurrentX = (Picture1.ScaleWidth - Picture1.TextWidth(txt_kode_supplier.Text)) * 0.88
+    Picture1.Print txt_kode_supplier.Text
+    Picture1.FontBold = False
+    Picture1.FontSize = 14
+'    Picture1.Print Tab(1); "                                          "
+'    Picture1.Print Tab(1); "                                          "
+'    Picture1.Print Tab(1); "                                          "
+'    Picture1.Print Tab(1); "                                          "
+'    Picture1.Print Tab(1); "                                          "
+    'Picture1.Print Tab(1); "                                          "
+    Picture1.FontBold = True
+    Picture1.CurrentY = 1200
+    Picture1.CurrentX = (Picture1.ScaleWidth - Picture1.TextWidth(txt_nama.Text)) / 2
+    'Picture1.Print Tab(((38 - Len(txt_nama.Text)) / 2) + 1); txt_nama.Text
+    Picture1.Print txt_nama.Text
+    'Picture1.Print Tab(2); Barcode39(txt_kode.Text)
+    
+'    Picture1.Print Tab(((24 - Len(txt_kode.Text)) / 2) + 1); txt_kode.Text
+    Picture1.CurrentY = 2500
+    Picture1.CurrentX = (Picture1.ScaleWidth - Picture1.TextWidth(txt_kode.Text)) / 2
+    Picture1.Print txt_kode.Text
+    Picture1.Print Tab(1); "                                          "
+    Picture1.Print Tab(1); "                                          "
+    Picture1.FontSize = 14
+'    Picture1.Print Tab(37 - Len(txt_kode_supplier.Text)); txt_kode_supplier.Text
+    Picture1.FontBold = False
+
+    Picture1.PaintPicture Picture3.Image, 10, 10
+    Printer.PaperSize = vbPRPSA4
+    Printer.Orientation = vbPRORLandscape
+
+    Dim xMargin, yMargin As Integer
+    xMargin = 300
+    yMargin = 100
+    resize = 0.66
+    Dim x, y As Integer
+    Dim posx, posy As Variant
+
+    For x = 0 To 0
+        posx = x * resize * Picture1.Width + xMargin
+        For y = 1 To 1
+            posy = y * resize * Picture1.Height + yMargin
+            Printer.PaintPicture Picture1.Image, posx, posy, Picture1.Width * resize, Picture1.Height * resize
+            Printer.PaintPicture Picture4.Image, posx + (Picture1.Width * resize - Picture4.Width * resize * 0.5) / 2, posy + 1090, Picture4.Width * resize * 0.5, Picture4.Height * resize * 0.5
+        Next
+    Next
+    Printer.EndDoc
+    RemoveFont (App.Path & "\fre3of9x.ttf")
+    DoEvents
 End Sub
 
 Private Sub Form_Activate()
@@ -421,7 +628,7 @@ Private Sub btn_cancel_Click()
     Unload Me
 End Sub
 Private Sub Form_Load()
-    Set rsbarang = con.Execute("select * from tbbarang")
+    Set rsBarang = con.Execute("select * from tbbarang")
     
     kosongkan
     'dp_masuk = Date
@@ -443,26 +650,26 @@ Private Function getBarang(kode As String) As Boolean
     
     Dim found As Boolean
     found = False
-    rsbarang.MoveFirst
-    Do While Not rsbarang.EOF
-        If rsbarang!kode = kode Then
+    rsBarang.MoveFirst
+    Do While Not rsBarang.EOF
+        If rsBarang!kode = kode Then
             found = True
             Exit Do
         End If
-        rsbarang.MoveNext
+        rsBarang.MoveNext
     Loop
     getBarang = found
 End Function
 
 Private Sub txt_kode_change()
     If getBarang(txt_kode) Then
-        txt_nama = rsbarang!nama
-        cb_kategori.Text = rsbarang!kategori
+        txt_nama = rsBarang!nama
+        cb_kategori.Text = rsBarang!kategori
         'txt_modal.Text = rsbarang!harga_modal
-        txt_jual = rsbarang!harga_jual
-        txt_kode_supplier.Text = rsbarang!kdsuplier
+        txt_jual = rsBarang!harga_jual
+        txt_kode_supplier.Text = rsBarang!kdsuplier
         Set rsSupplier = con.Execute("select * from tbsuplier")
-        If getSupplier(rsbarang!kdsuplier) Then
+        If getSupplier(rsBarang!kdsuplier) Then
             txt_nama_supplier = rsSupplier!nmsuplier
         End If
         'txt_ketahanan.Text = rsbarang!ketahanan
@@ -571,7 +778,7 @@ Private Sub list_supplier_LostFocus()
 End Sub
 
 Private Sub list_supplier_dblclick()
-    If list_supplier.SelectedItem.Index >= 0 Then
+    If list_supplier.SelectedItem.index >= 0 Then
         txt_kode_supplier = list_supplier.SelectedItem.Text
         txt_nama_supplier = list_supplier.SelectedItem.SubItems(1)
         'txt_ketahanan.SetFocus
@@ -626,3 +833,84 @@ Private Function cek_Kategori() As Boolean
         i = i + 1
     Loop
 End Function
+
+Function Barcode39(InString As String) As String
+  ' This function returns the input string with:
+  ' a start *, the original string, a check digit, and a stop *
+'  Dim i As Integer                ' Counter
+'  Dim Chk As Integer              ' Check Digit
+'  Dim Char1 As String             ' Current character
+  Dim temp As String
+'  Dim c39CharSet    As String     ' The 3 of 9 43 character set
+'  c39CharSet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ-. $/+%"
+'  Chk = 0
+'  For i = 1 To Len(InString)
+'    Char1 = Mid$(InString, i, 1)
+'    ' find the position of this character in the valid set of
+'    ' 43 characters and subtract 1 (zero based)
+'    Chk = Chk + (InStr(c39CharSet, Char1) - 1)
+'  Next i
+'
+'  temp = Mid$(c39CharSet, (Chk Mod 43) + 1, 1)
+  'check digit disabled
+  temp = ""
+  Barcode39 = "*" & InString & temp & "*"
+End Function
+
+Private Sub MonoChrome()
+    ' // Convert to B&W //
+    Dim DeskWnd As Long, DeskDC As Long
+    Dim MyDC As Long
+    Dim MyDIB As Long, OldDIB As Long
+    Dim DIBInf As BITMAPINFO1
+    
+    Picture4.AutoRedraw = True
+
+    'Create DC based on desktop DC
+    DeskWnd = GetDesktopWindow()
+    DeskDC = GetDC(DeskWnd)
+    MyDC = CreateCompatibleDC(DeskDC)
+    ReleaseDC DeskWnd, DeskDC
+    'Validate DC
+    If (MyDC = 0) Then Exit Sub
+    'Set DIB information
+    With DIBInf
+        With .bmiHeader 'Same size as picture
+            .biWidth = Picture4.ScaleX(Picture4.ScaleWidth, Picture4.ScaleMode, vbPixels)
+            .biHeight = Picture4.ScaleY(Picture4.ScaleHeight, Picture4.ScaleMode, vbPixels)
+            .biBitCount = 1
+            .biPlanes = 1
+            .biClrUsed = 2
+            .biClrImportant = 2
+            .biSize = Len(DIBInf.bmiHeader)
+        End With
+        ' Palette is Black ...
+        With .bmiColors(0)
+            .rgbRed = &H0
+            .rgbGreen = &H0
+            .rgbBlue = &H0
+        End With
+        ' ... and white
+        With .bmiColors(1)
+            .rgbRed = &HFF
+            .rgbGreen = &HFF
+            .rgbBlue = &HFF
+        End With
+    End With
+    ' Create the DIBSection
+    MyDIB = CreateDIBSection1(MyDC, DIBInf, 0, ByVal 0&, 0, 0)
+    If (MyDIB) Then ' Validate and select DIB
+        OldDIB = SelectObject(MyDC, MyDIB)
+           BitBlt MyDC, 0, 0, DIBInf.bmiHeader.biWidth, DIBInf.bmiHeader.biHeight, Picture4.hdc, 0, 0, vbSrcCopy
+        ' Draw the monochome image back to the picture box
+        BitBlt Picture4.hdc, 0, 0, DIBInf.bmiHeader.biWidth, DIBInf.bmiHeader.biHeight, MyDC, 0, 0, vbSrcCopy
+        ' Clean up DIB
+        SelectObject MyDC, OldDIB
+        DeleteObject MyDIB
+    End If
+    ' Clean up DC
+    DeleteDC MyDC
+    ' Redraw
+    Picture4.Refresh
+End Sub
+

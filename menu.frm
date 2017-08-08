@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.2#0"; "MSCOMCTL.OCX"
 Begin VB.MDIForm FrmMain 
    BackColor       =   &H8000000C&
    Caption         =   "Main Menu"
@@ -168,6 +168,9 @@ Begin VB.MDIForm FrmMain
       Begin VB.Menu ebr 
          Caption         =   "Entri Barang / Stock"
       End
+      Begin VB.Menu cb 
+         Caption         =   "Cetak Barcode"
+      End
       Begin VB.Menu pb 
          Caption         =   "Entri Pembelian"
       End
@@ -216,6 +219,11 @@ End Sub
 
 Private Sub bd_Click()
     Call changeForm(Form_List_Supplier)
+End Sub
+
+Private Sub cb_Click()
+'    Form_Print_Barcode.Show
+    Form_Barcode.Show
 End Sub
 
 Private Sub ebr_Click()

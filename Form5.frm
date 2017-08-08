@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.2#0"; "MSCOMCTL.OCX"
 Object = "{38911DA0-E448-11D0-84A3-00DD01104159}#1.1#0"; "COMCT332.OCX"
 Begin VB.Form Form_List_barang 
    Caption         =   "Barang"
@@ -253,37 +253,37 @@ Private Sub Form_Resize()
 End Sub
 Public Sub refreshlist()
     Dim mitem As ListItem
-    Dim rsbarang As New ADODB.Recordset
-    Set rsbarang = con.Execute("SELECT * from v_barang where nama like '%" & txt_filter & "%'")
+    Dim rsBarang As New ADODB.Recordset
+    Set rsBarang = con.Execute("SELECT * from v_barang where nama like '%" & txt_filter & "%'")
     
     LV1.ListItems.Clear
-    If rsbarang.RecordCount = 0 Then
+    If rsBarang.RecordCount = 0 Then
         Toolbar1.Buttons(2).Enabled = False
         Toolbar1.Buttons(3).Enabled = False
     Else
         Toolbar1.Buttons(2).Enabled = True
         Toolbar1.Buttons(3).Enabled = True
-        If Not rsbarang.EOF Then
-            rsbarang.MoveFirst
+        If Not rsBarang.EOF Then
+            rsBarang.MoveFirst
         
-            Do While Not rsbarang.EOF
-                Set mitem = LV1.ListItems.Add(, , rsbarang.Fields("kode"))
-                mitem.SubItems(1) = rsbarang.Fields("Nama")
-                mitem.SubItems(2) = rsbarang.Fields("kategori")
+            Do While Not rsBarang.EOF
+                Set mitem = LV1.ListItems.Add(, , rsBarang.Fields("kode"))
+                mitem.SubItems(1) = rsBarang.Fields("Nama")
+                mitem.SubItems(2) = rsBarang.Fields("kategori")
                 'mitem.SubItems(3) = Format(rsbarang.Fields("harga_modal"), "###,###,##0")
-                mitem.SubItems(3) = Format(rsbarang.Fields("harga_jual"), "###,###,##0")
+                mitem.SubItems(3) = Format(rsBarang.Fields("harga_jual"), "###,###,##0")
                 'disabled, hapus jumlah_akhir
                 'mitem.SubItems(5) = rsbarang.Fields("jumlah_akhir")
                 'mitem.SubItems(7) = Format(rsbarang.Fields("tgl_masuk"), "dd-MM-yyyy")
-                mitem.SubItems(4) = rsbarang!nmsuplier
-                rsbarang.MoveNext
+                mitem.SubItems(4) = rsBarang!nmsuplier
+                rsBarang.MoveNext
             Loop
         End If
   End If
   
   CoolBar1.Bands(3).Caption = "Record : " & LV1.ListItems.count
-  rsbarang.Close
-  Set rsbarang = Nothing
+  rsBarang.Close
+  Set rsBarang = Nothing
 End Sub
 
 Private Sub Form_Load()
@@ -300,10 +300,10 @@ Private Sub LV1_ColumnClick(ByVal ColumnHeader As MSComctlLib.ColumnHeader)
   For i = 1 To LV1.ColumnHeaders.count
     LV1.ColumnHeaders.item(i).Icon = 0
   Next
-  If LV1.SortKey <> ColumnHeader.Index - 1 Then
+  If LV1.SortKey <> ColumnHeader.index - 1 Then
     LV1.SortOrder = lvwAscending
     ColumnHeader.Icon = 1
-    LV1.SortKey = ColumnHeader.Index - 1
+    LV1.SortKey = ColumnHeader.index - 1
   Else
     If LV1.SortOrder = lvwAscending Then
       LV1.SortOrder = lvwDescending
@@ -331,7 +331,7 @@ Private Sub LV1_KeyPress(KeyAscii As Integer)
 End Sub
 
 Public Sub Toolbar1_ButtonClick(ByVal Button As MSComctlLib.Button)
-  Select Case Button.Index
+  Select Case Button.index
   Case 1
     tambah
   Case 2
@@ -360,7 +360,7 @@ Private Sub hapus()
     con.BeginTrans
     con.Execute (strsql)
     con.CommitTrans
-    LV1.ListItems.Remove (LV1.SelectedItem.Index)
+    LV1.ListItems.Remove (LV1.SelectedItem.index)
   End If
   LV1.SetFocus
   CoolBar1.Bands(3).Caption = "Record : " & LV1.ListItems.count
